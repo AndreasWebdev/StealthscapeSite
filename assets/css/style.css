@@ -1,0 +1,155 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,700');
+body {
+  background: #eee;
+  font-size: 16px;
+  font-family: 'Roboto', sans-serif;
+}
+.wrapper {
+  max-width: 1140px;
+  width: 90%;
+  margin: 0 auto;
+}
+header {
+  background: #fff;
+  box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  z-index: 100;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+}
+header .logo {
+  display: flex;
+  align-items: center;
+}
+header nav {
+  display: flex;
+  justify-content: flex-end;
+}
+header nav .item {
+  padding: 20px 10px;
+  font-size: 1.05em;
+  font-weight: 700;
+  color: #000;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+header nav .item:hover {
+  color: #3db2fe;
+  cursor: pointer;
+}
+.section-jumbotron {
+  height: 70vh;
+  background: rgba(0, 0, 0, 0.03);
+  box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+.section-jumbotron video {
+  min-width: 100%;
+  min-height: 100%;
+}
+.section-jumbotron .logo {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.section-jumbotron .logo img {
+  max-width: 80%;
+  height: 95px;
+}
+.section-synopsis {
+  margin: 25px 0px;
+  margin-top: 50px;
+  padding: 25px 0px;
+  background: #fff;
+  box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.1);
+}
+.section-synopsis p {
+  text-align: center;
+  max-width: 620px;
+  margin: 0 auto;
+  line-height: 1.5;
+  font-weight: 300;
+  font-size: 1.25em;
+}
+.section-feature {
+  margin: 25px 0px;
+  background: #fff;
+  box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.1);
+}
+.section-feature .image {
+  background-position: center;
+  background-size: cover;
+  background-color: rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+.section-feature .image video {
+  min-height: 100%;
+}
+.section-feature .text {
+  padding: 50px;
+  line-height: 1.5;
+}
+.section-feature .text h1 {
+  font-weight: 700;
+  margin-bottom: 10px;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #3db2fe;
+}
+.section-feature .text h1:nth-of-type(n+2) {
+  margin-top: 50px;
+}
+.section-distribution {
+  margin: 25px 0px;
+}
+.section-distribution .steam {
+  background: #000000;
+  background: linear-gradient(135deg, #000000 0%, #003b68 100%);
+  padding: 25px 0px;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.1);
+  transition: 0.2s ease all;
+  cursor: pointer;
+}
+.section-distribution .steam img {
+  max-width: 50%;
+  max-height: 70px;
+}
+.section-distribution .steam:hover {
+  transform: translate(-5px, -5px);
+  box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.1);
+}
+footer {
+  margin: 25px 0px;
+  margin-bottom: 50px;
+  text-align: center;
+  font-weight: 300;
+}
+footer img {
+  height: 50px;
+  margin: 0 auto;
+  margin-bottom: 20px;
+  opacity: 0.3;
+}
+footer p {
+  opacity: 0.35;
+}

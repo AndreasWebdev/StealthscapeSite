@@ -1,0 +1,19 @@
+@media only screen and (max-width: 1000px) {
+  header nav .item:not(:first-child) {
+    display: none;
+  }
+  .section-jumbotron video {
+    min-width: inherit;
+  }
+  .section-feature {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+  .section-feature .image {
+    height: 250px;
+    grid-row: 1;
+  }
+  .section-feature .text {
+    grid-row: 2;
+  }
+}
