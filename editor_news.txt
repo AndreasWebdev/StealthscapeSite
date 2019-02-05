@@ -6,9 +6,9 @@ The editor has been improved a bunch so here's some new things you can try out:
 - Try hovering your cursor over the "?" Icon
 (It can be helpful sometimes)
 
-- Try Publishing a new Stage!
+- Try Publishing a new Stage for the Weekly Challenge!
 
-Theme: "Corners and Edges"
+> > > Theme: "Corners and Edges" < < <
 
 When publishing, click on the "Weekly" tag.
 This will automatically enter your stage into the weekly editor challenge!
