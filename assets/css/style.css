@@ -69,7 +69,7 @@ header nav .item:hover {
   height: 95px;
 }
 .section-jumbosmall {
-  header: 20vh;
+  height: 20vh;
 }
 .section-featuresmall .image{
   height: 300px;
