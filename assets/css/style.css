@@ -68,6 +68,12 @@ header nav .item:hover {
   max-width: 80%;
   height: 95px;
 }
+.section-jumbosmall {
+  header: 20vh;
+}
+.section-featuresmall .image{
+  height: 300px;
+}
 .section-synopsis {
   margin: 25px 0px;
   margin-top: 50px;
