@@ -164,6 +164,28 @@ header nav .item:hover {
   transform: translate(-5px, -5px);
   box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.1);
 }
+
+.section-distribution .patreon {
+  background: #000000;
+  background: linear-gradient(135deg, #052d49 0%, #f96854 100%);
+  padding: 25px 0px;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 5px 5px 0px rgba(0, 0, 0, 0.1);
+  transition: 0.2s ease all;
+  cursor: pointer;
+}
+.section-distribution .patreon img {
+  max-width: 50%;
+  max-height: 70px;
+}
+.section-distribution .patreon:hover {
+  transform: translate(-5px, -5px);
+  box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.1);
+}
+
 footer {
   margin: 25px 0px;
   margin-bottom: 50px;
