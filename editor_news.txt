@@ -1,10 +1,7 @@
-Monthly Editor Challenge #1
+Welcome to the Stealthscape Editor!
 
-Theme: "Double"
-
-You may interpret the theme in whatever way you see fit, as long as it DOES fit.
-
-ENDS APRIL 30th, 2019
+Check out the Help menu for hidden
+controls and tips!
 
 Discord: discord.gg/MTeq58B
 Trello: bit.ly/StealthscapeTrello
