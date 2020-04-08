@@ -1,10 +1,9 @@
 Welcome to the Stealthscape Editor!
 
 Check out the Help menu for hidden
-controls and tips!
+controls and tips, and the Steam Guide
+for help with tags and logic.
 
-Discord: discord.gg/MTeq58B
+Discord: discord.gg/55tqBzj
 Trello: bit.ly/StealthscapeTrello
 Website: stealthscape.net
-
-test
