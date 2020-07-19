@@ -1,8 +1,9 @@
 pico-8 cartridge // http://www.pico-8.com
 version 27
 __lua__
+--stealthscape demake
+--by carson kompon
 t=0
-
 function _init()
 	music(0,10000)
 	igm=false
@@ -12,8 +13,8 @@ end
 function init_game()
 	if(mus) music(2,1000,7)
 	
-	--objs
 	portal={x=0,y=0,box={x1=0,y1=0,x2=7,y2=7}}
+	explos_init()
 	
 	crot=1
 	prot=1
@@ -34,40 +35,73 @@ function _update60()
 	
 	--ingame update
 	if igm then
-		if not win then
+		if not win and not dead then
+		
 		 ship_movement()
 		 if(pts > 0) pts -= 1/60
+		 
+		 --coin collision
+			for c in all(coins) do
+				if(coll(ship,c)) then
+					del(coins,c)
+					if(cnch < 7) cnch+=1
+					chtm = 30
+					sfx(18+cnch)
+					pts += 0.5
+				end
+			end
+			
+			--btn collision
+			for bt in all(btns) do
+				if(coll(ship,bt)) then
+					del(btns,bt)
+					btnc+=1
+					if(btnc==stages[stagenum].btns) open_doors()
+				end
+			end
+			
+			--mine collision
+			for m in all(mines) do
+				if(coll(ship,m)) then
+					dead=true
+					screenshake(10,0.1)
+					sfx(27)
+					explode(ship.x+3,ship.y+3,5,50)
+				end
+			end
+			
+			--portal collision
+			if(not win and coll(ship,portal)) then
+				sfx(26,2)
+				screenshake(5,0.1)
+				explode(portal.x+3,portal.y+3,1.5,50,0.2,7)
+				win = true
+				ship.x = portal.x
+				ship.y = portal.y
+			end
+		 
 		else
 		 --retry
 		 if btn(❎) or btn(🅾️) then
-		 	if(btn(🅾️)) stagenum+=1
+		 	if btn(🅾️) then
+		 		if(not dead) stagenum+=1
+		 	end
+		 	if btn(x) and dead then
+	 			music(-1)
+	 	 	if(mus) music(0,10000)
+	 	 	igm=false
+		 	end
 		 	if(stagenum > #stages) stagenum = #stages
 		 	clear_map()
 		 	load_stage(stagenum)
 		 end
 		end
 	
+		--coin and portal rotation
 		crot+=1
 		prot+=1
 		if crot > (5*3) then crot = 1 end
 		if prot > (5*7) then prot = 1 end
-		
-		for c in all(coins) do
-			if(coll(ship,c)) then
-				del(coins,c)
-				if(cnch < 7) cnch+=1
-				chtm = 30
-				sfx(18+cnch)
-				pts += 0.5
-			end
-		end
-		
-		if(not win and coll(ship,portal)) then
-			sfx(26,2)
-			win = true
-			ship.x = portal.x
-			ship.y = portal.y
-		end
 		
 		if(cnch > 0) then
 			chtm-=1
@@ -77,12 +111,32 @@ function _update60()
 			end
 		end
 		
-		if(mus and stat(24) == -1) music(4)
+		--explosion fx
+		for i=1,#sparks do
+			if sparks[i].alive then
+				sparks[i].x += sparks[i].velx / sparks[i].mass
+				sparks[i].y += sparks[i].vely / sparks[i].mass
+				sparks[i].r -= sparks[i].spd
+				if sparks[i].r < sparks[i].spd then
+					sparks[i].alive = false
+				end
+			end
+		end
+		
+		--screenshake
+		if shake > 0 then
+			shake -= shakedec
+		elseif shake < 0 then
+			shake = 0
+		end
+		
+		--music looping
+		if(mus and stat(24) == -1) music(4,0,7)
 	
 	else --menu update
 	
 		if btnp(❎) then
-			if stat(24) == -1 then music(0)
+			if stat(24) == -1 then music(0,10000)
 			else music(-1) end
 			mus = not mus
 		elseif btnp(🅾️) then
@@ -94,71 +148,42 @@ function _update60()
 	end
 end
 
-function _draw()
-	if not igm then draw_menu()
-	else draw_game() end
+function screenshake(am,dc)
+	shake=am
+	shakedec=dc
 end
 
-function draw_menu()
-	cls()
-	camera(0,0)
-	rectfill(0,0,128,128,1)
-	spr(64,12,14+sin(t/128)*3,13,2)
-	spr(1,90,54)
-	line(94,58,63,58,7)
-	fillp(▥)
-	line(63,58,30,58,7)
-	fillp(█)
-	local st = "🅾️ - play"
-	print(st,63-#st*2,90)
-	st = "❎ - toggle music"
-	print(st,63-#st*2,100)
-end
-
-function draw_game()
- local camx=flr(ship.x)-64+4
- local camy=flr(ship.y)-64+4
-	cls()
-	rectfill(camx-4,camy-4,camx+132,camy+132,13)
-	map()
-	camera(camx,camy)
-	
-	if not win then
-		ship.sp = ship_spr()
-		spr(ship.sp,ship.x,ship.y)
+function explos_init()
+	sparks={}
+	for i=1,200 do
+		add(sparks,{
+		x=0,y=0,velx=0,vely=0,
+		r=0,alive=false,col=6,spd=0.1
+		})
 	end
-	
-	for coi in all(coins) do
-		spr(9+ceil(crot/5),coi.x,coi.y)
-	end
-	
-	spr(13+ceil(prot/5),portal.x,portal.y)
-	
-	draw_gui(camx,camy)
 end
 
-function draw_gui(xx,yy)
-	rectfill(xx+56,yy+2,xx+72,yy+10,7)
-	color(0)
-	local scor = tostr(flr(pts))
-	scor = sub(scor,1,#scor-3)
-	local dec = flr((pts-flr(pts))*10)
-	scor = scor .. "." .. dec
-	print(scor,xx+65-#scor*2,yy+4)
-	
-	if win then
-		color(7)
-		local st = "sTAGE cOMPLETE!"
-		local off = 60-#st*2
-		for i=1,#st do
-			print(sub(st,i,i),xx+i*4+off,yy+sin((t+i*5)/64)*3+24)
+function explode(x,y,r,particles,spd,col)
+	spd = spd or 1
+	col = col or 6
+	local selected = 0
+	for i=1,#sparks do
+		if not sparks[i].alive then
+			sparks[i].x = x
+			sparks[i].y = y
+			sparks[i].vely = -1 + rnd(2)
+			sparks[i].velx = -1 + rnd(2)
+			sparks[i].mass = 0.5 + rnd(2)
+			sparks[i].r = 0.5 + rnd(r)
+			sparks[i].alive = true
+			sparks[i].col = col
+			sparks[i].spd = spd/10
+			
+			selected += 1
+			if selected == particles then
+			break end
 		end
-		st = "pRESS 🅾️ TO cONTINUE"
-		print(st,xx+63-#st*2,yy+100)
-		st = "pRESS ❎ TO rETRY"
-		print(st,xx+63-#st*2,yy+108)
 	end
-	
 end
 
 function sign(n)
@@ -169,6 +194,7 @@ end
 --ship code
 
 function init_ship()
+	--ship vars
 	ship = {
 	sp=1,
 	x=168,
@@ -179,8 +205,13 @@ function init_ship()
 	fric=0.05,
 	box = {x1=0,y1=0,x2=7,y2=7}
 	}
+	--other vars
+	trail={}
 	win=false
+	dead=false
 	pts = 50.0
+	shake=0
+	shakedec=0
 end
 
 function ship_movement()
@@ -212,14 +243,21 @@ function ship_movement()
 	end
 	
 	if(ship.hs != 0 and cmap(ship.x+ship.hs,ship.y)) then
+		explode(ship.x+3+ship.hs,ship.y+3,2,10)
+		screenshake(3,1)
 		ship.hs = -ship.hs/2
 	end
 	if(ship.vs != 0 and cmap(ship.x,ship.y+ship.vs)) then
+		explode(ship.x+3,ship.y+3+ship.vs,2,10)
+		screenshake(3,1)
 		ship.vs = -ship.vs/2
 	end
 	
 	ship.x += ship.hs
 	ship.y += ship.vs
+	
+	add(trail,{x=ship.x+3,y=ship.y+3})
+	if(#trail > 30) del(trail,trail[1])
 end
 
 --get spr based on inputs
@@ -233,6 +271,16 @@ function ship_spr()
 	elseif btn(⬅️) then return 5
 	elseif btn(⬇️) then return 7
 	else return ship.sp end
+end
+
+function draw_trail()
+	if #trail > 1 then
+		for i=1,#trail-1 do
+			if(i<15) fillp(▒)
+			line(trail[i].x,trail[i].y,trail[i+1].x,trail[i+1].y,7)
+			fillp(█)
+		end
+	end
 end
 -->8
 --collisions
@@ -287,9 +335,24 @@ function clear_map()
 	end
 end
 
+function open_doors()
+doors={}
+	for i=0,127 do
+		for j=0,63 do
+			if(mget(i,j)==29) mset(i,j,0)
+		end
+	end
+end
+
 function load_stage(num)
  init_ship()
  coins={}
+ mines={}
+ btns={}
+ btnc=0
+ walls={}
+ doors={}
+ explos_init()
 	win = false
 	for i=0,stages[num].h-1 do
 		for j=0,stages[num].w do
@@ -298,6 +361,10 @@ function load_stage(num)
 			
 			if(ob=="1") then
 				mset(j,i,9)
+				add(walls,{x=j*8,y=i*8})
+			elseif(ob=="4") then
+				mset(j,i,29)
+				add(doors,{x=j*8,y=i*8})
 			elseif(ob=="7") then
 				ship.x = j*8
 				ship.y = i*8
@@ -307,7 +374,20 @@ function load_stage(num)
 			elseif(ob=="2") then
 				add(coins,
 				{x=j*8,y=i*8,
-				box={x1=3,y1=3,x2=5,y2=5}})
+				box={x1=2,y1=2,x2=5,y2=5}})
+			elseif(ob=="3") then
+				add(mines,
+				{x=j*8,y=i*8,
+				box={x1=2,y1=2,x2=5,y2=5}})
+			elseif(ob=="u" or ob=="d" or ob=="l" or ob=="r") then
+				local dr=0
+				if ob=="d" then dr=1
+				elseif ob=="l" then dr=2
+				elseif ob=="r" then dr=3
+				end
+				add(btns,
+				{x=j*8,y=i*8,d=dr,
+				box={x1=2,y1=2,x2=5,y2=5}})	
 			end
 		end
 	end
@@ -321,15 +401,16 @@ function init_stages()
 		0=blank (also "-")
 		1=wall
 		2=coin
-		3=weakling
-		4=speeder
-		5=tank
+		3=mine
+		4=door
+		5=
 		6=end portal
 		7=player
+		u/d/l/r=button
 	]]--
 	
 	add(stages,{
-	w=39,h=20,stage=[[
+	w=39,h=20,btns=1,stage=[[
 	-1111111111111111111111111111111111111-
 	11-----------------------------------11
 	1-----------222-----222-----222-------1
@@ -350,11 +431,10 @@ function init_stages()
 	1-------222--------1--------222-------1
 	11----------------111----------------11
 	-1111111111111111111111111111111111111-
-	]]
-	})
+	]]})
 	
 	add(stages,{
-	w=68,h=9,stage=[[
+	w=68,h=9,btns=1,stage=[[
 	-111111111111111111111111111111111111111111111111111111111111111111-
 	11----------------------------------------------------------------11
 	1--------------111---------111--------22-----------222------111----1
@@ -364,27 +444,185 @@ function init_stages()
 	1--------------------111222------111--22--------111----------------1
 	11----------------------------------------------------------------11
 	-111111111111111111111111111111111111111111111111111111111111111111-
-	]]
-	})
+	]]})
+	
+	add(stages,{
+	w=19,h=19,btns=1,stage=[[
+	-11111111111111111-
+	11---------------11
+	1-------2222------1
+	1------2----2-----1
+	1--3-2--2222---2--1
+	1---2-----------2-1
+	1--2---111111----21
+	1-----11--------2-1
+	1-----1--------2--1
+	1-222-1--7--------1
+	1-222-1-----------1
+	1-----11---------11
+	1------11111111111-
+	1--2-------------11
+	1---2----222------1
+	1--3-2----3----6--1
+	1--------222------1
+	11---------------11
+	-11111111111111111-
+	]]})
+	
+	add(stages,{
+	w=22,h=19,btns=3,stage=[[
+	-11111111111111111111-
+	11------------------11
+	1---------------2----1
+	1--------------2--3--1
+	1-----222222222------1
+	1--2-------------2---1
+	1--2r1111111111--2---1
+	1--2----------11-2---1
+	1--------3-----1-2---1
+	1-------------r1l2---1
+	1---222222222--1-2---1
+	11------------11-2---1
+	-11111111111111--2---1
+	11----4----------2---1
+	1-----4------------3-1
+	1--6--4---7----------1
+	1-----4-----2222222--1
+	11----4-------------11
+	-11111111111111111111-
+	]]})
+end
+-->8
+--draw code
+function _draw()
+	if not igm then draw_menu()
+	else draw_game() end
+end
+
+--main menu
+function draw_menu()
+	cls()
+	camera(0,0)
+	rectfill(0,0,128,128,1)
+	spr(64,12,14+sin(t/128)*3,13,2)
+	spr(1,90,54)
+	line(94,58,63,58,7)
+	fillp(▥)
+	line(63,58,30,58,7)
+	fillp(█)
+	local st = "🅾️ - play"
+	print(st,63-#st*2,90)
+	st = "❎ - toggle music"
+	print(st,63-#st*2,100)
+end
+
+--in-game
+function draw_game()
+ local camx=flr(ship.x-60+rnd(shake)-shake/2)
+ local camy=flr(ship.y-60+rnd(shake)-shake/2)
+	cls()
+	rectfill(camx-4,camy-4,camx+132,camy+132,13)
+	map()
+	camera(camx,camy)
+	
+	--draw ship and trail
+	if not win and not dead then
+		draw_trail()
+		ship.sp = ship_spr()
+		spr(ship.sp,ship.x,ship.y)
+	end
+	
+	--draw coins
+	for coi in all(coins) do
+		spr(9+ceil(crot/5),coi.x,coi.y)
+	end
+	
+	--draw mines
+	for mi in all(mines) do
+		spr(22,mi.x,mi.y)
+	end
+
+	--draw btns
+	for bu in all(btns) do
+		spr(23+bu.d,bu.x,bu.y)
+	end
+	
+	--draw walls
+	for wl in all(walls) do
+		spr(27,wl.x,wl.y)
+	end
+	
+	--draw doors
+	for dr in all(doors) do
+		spr(28,dr.x,dr.y)
+	end
+	
+	--draw portal
+	spr(13+ceil(prot/5),portal.x,portal.y)
+	
+	--draw explosion fx
+		for i=1,#sparks do
+			if sparks[i].alive then
+				circfill(sparks[i].x,sparks[i].y,
+				sparks[i].r,sparks[i].col)
+			end
+		end
+	
+	draw_gui(camx,camy)
+end
+
+--in-game gui
+function draw_gui(xx,yy)
+	rectfill(xx+56,yy+2,xx+72,yy+10,7)
+	color(0)
+	local scor = tostr(flr(pts))
+	scor = sub(scor,1,#scor-3)
+	local dec = flr((pts-flr(pts))*10)
+	scor = scor .. "." .. dec
+	print(scor,xx+65-#scor*2,yy+4)
+	
+	if win then
+		color(7)
+		local st = "sTAGE cOMPLETE!"
+		local off = 60-#st*2
+		for i=1,#st do
+			print(sub(st,i,i),xx+i*4+off,yy+sin((t+i*5)/64)*3+24)
+		end
+		st = "pRESS 🅾️ TO cONTINUE"
+		print(st,xx+63-#st*2,yy+100)
+		st = "pRESS ❎ TO rETRY"
+		print(st,xx+63-#st*2,yy+108)
+	elseif dead then
+		color(7)
+		local st = "sTAGE fAILED!"
+		local off = 60-#st*2
+		for i=1,#st do
+			print(sub(st,i,i),xx+i*4+off,yy+sin((t+i*5)/64)*3+24)
+		end
+		st = "pRESS 🅾️ TO rETRY"
+		print(st,xx+63-#st*2,yy+100)
+		st = "pRESS ❎ FOR mAIN mENU"
+		print(st,xx+63-#st*2,yy+108)
+	end
 	
 end
 __gfx__
-0000000077000000000007770007700077700000000000770077000077000077000077001111111100000000000000000000000000eeee0000eeee0000eeee00
-000000007777000000777777000770007777770000007777007700007777777700007700111111110000000000000000000000000ee00ee00ee00ee00ee00ee0
-00700700077777007777777700777700777777770077777007777000077777700007777011111111007007000007000000007000ee00e0eeee0000eeee0000ee
-00077000077777777777777000777700077777777777777007777700077777700077777011111111000770000007770000777000e0000e0ee0000e0ee000000e
-00077000077777770077777007777770077777007777777007777777007777007777777011111111000770000077700000077700e0000e0ee0000e0ee0e00e0e
-00700700077777000007777007777770077770000077777077777777007777007777777711111111007007000000700000070000ee00e0eeee0ee0eeee0ee0ee
-000000007777000000007700777777770077000000007777777777000007700000777777111111110000000000000000000000000ee00ee00ee00ee00ee00ee0
-0000000077000000000077007700007700770000000000777770000000077000000007771111111100000000000000000000000000eeee0000eeee0000eeee00
-00eeee0000eeee0000eeee0000eeee0000eeee000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0ee00ee00ee00ee00ee00ee00ee00ee00ee00ee00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-ee0000eeee0e00eeee0ee0eeee0ee0eeee0ee0ee0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-e0e0000ee0e0000ee0e0000ee0e00e0ee0000e0e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-e0e0000ee0e0000ee0e0000ee000000ee0000e0e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-ee0ee0eeee0e00eeee0000eeee0000eeee0000ee0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0ee00ee00ee00ee00ee00ee00ee00ee00ee00ee00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00eeee0000eeee0000eeee0000eeee0000eeee000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000007700000000000777000770007770000000000077007700007700007700007700dddddddd00000000000000000000000000eeee0000eeee0000eeee00
+000000007777000000777777000770007777770000007777007700007777777700007700dddddddd0000000000000000000000000ee00ee00ee00ee00ee00ee0
+007007000777770077777777007777007777777700777770077770000777777000077770dddddddd007007000007000000007000ee00e0eeee0000eeee0000ee
+000770000777777777777770007777000777777777777770077777000777777000777770dddddddd000770000007770000777000e0000e0ee0000e0ee000000e
+000770000777777700777770077777700777770077777770077777770077770077777770dddddddd000770000077700000077700e0000e0ee0000e0ee0e00e0e
+007007000777770000077770077777700777700000777770777777770077770077777777dddddddd007007000000700000070000ee00e0eeee0ee0eeee0ee0ee
+000000007777000000007700777777770077000000007777777777000007700000777777dddddddd0000000000000000000000000ee00ee00ee00ee00ee00ee0
+000000007700000000007700770000770077000000000077777000000007700000000777dddddddd00000000000000000000000000eeee0000eeee0000eeee00
+00eeee0000eeee0000eeee0000eeee0000eeee000000000000000000eeeeeeee00000000e00000000000000e1111111111111111dddddddd0000000000000000
+0ee00ee00ee00ee00ee00ee00ee00ee00ee00ee077700000008000000eeeeee000000000eeee00000000eeee1111111111111111dddddddd0000000000000000
+ee0000eeee0e00eeee0ee0eeee0ee0eeee0ee0ee70700000000880800eeeeee000000000eeee00000000eeee1111111111111111dddddddd0000000000000000
+e0e0000ee0e0000ee0e0000ee0e00e0ee0000e0e70777770008888000eeeeee000000000eeee00000000eeee1111111111100111dddddddd0000000000000000
+e0e0000ee0e0000ee0e0000ee000000ee0000e0e7070707000888800000000000eeeeee0eeee00000000eeee1111111111100111dddddddd0000000000000000
+ee0ee0eeee0e00eeee0000eeee0000eeee0000ee7070707008088000000000000eeeeee0eeee00000000eeee1111111111111111dddddddd0000000000000000
+0ee00ee00ee00ee00ee00ee00ee00ee00ee00ee07770000000000800000000000eeeeee0eeee00000000eeee1111111111111111dddddddd0000000000000000
+00eeee0000eeee0000eeee0000eeee0000eeee00000000000000000000000000eeeeeeeee00000000000000e1111111111111111dddddddd0000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -548,10 +786,10 @@ __label__
 11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
 
 __gff__
-0000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000100000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
-0026000026050210501f0501a05026050210501f0501a05026050210501f0501a05026050210501f0501a0501c0502105023050280501c0502105023050280501c0502105023050280501c050210502305028050
+0126000026050210501f0501a05026050210501f0501a05026050210501f0501a05026050210501f0501a0501c0502105023050280501c0502105023050280501c0502105023050280501c050210502305028050
 011000000605300003000030000300003000030000300003000030000300003000030000300003000030000300003000030000300003000030000300003000030000300003000030000300003000030000300003
 012600000244002440024400244002440024400244002440024400244002440024400244002440024400244004440044400444004440044400444004440044400444004440044400444004440044400444004440
 001000003274504705007050070500705007050070500705007050070500705007050070500705007050070500705007050070500705007050070500705007050070500705007050070500705007050070500705
@@ -578,6 +816,7 @@ __sfx__
 001000003c74504705007050070500705007050070500705007050070500705007050070500705007050070500705007050070500705007050070500705007050070500705007050070500705007050070500705
 001000003e74504705007050070500705007050070500705007050070500705007050070500705007050070500705007050070500705007050070500705007050070500705007050070500705007050070500705
 000800001c0502105023050280501c0402104023040280401c0302103023030280301c0202102023020280201c0102101023010280131c0002100023000280001c0002100023000280001c000210002300028000
+010500001a1530e6530e6530e65302653026430264302643026430264302633026330263302633026330262302623026230262302623026130261302613026130261302603026030260302603026030260302603
 __music__
 01 00024304
 03 00024305
