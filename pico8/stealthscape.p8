@@ -555,7 +555,7 @@ function init_stages()
 	]]})
 	
 	add(stages,{
-	w=74,h=9,btns=1,stage=[[
+	w=74,h=9,btns=1,ldly=60,stage=[[
 	--------------------------------------------------111111111111111---------
 	111111111111111111111111111111111111111111111111111k11k11111k11k111111111-
 	1;----------------------------1;-----------1;---------------------------11
@@ -776,7 +776,7 @@ end
 function obj_behaviour()
 	
 	for ml in all(lnchrs) do
-		if t % 60 == 0 then
+		if t % stages[stagenum].ldly == 0 then
 			local hv = 0
 			local vv = 0
 			if ml.d == 0 then vv=-1.5
