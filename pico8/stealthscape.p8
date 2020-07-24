@@ -1,10 +1,12 @@
 pico-8 cartridge // http://www.pico-8.com
-version 27
+version 29
 __lua__
 --stealthscape demake
 --by carson kompon
 t=0
 function _init()
+	cartdata("carsonk_stlthscp")
+	menuitem(1, "return to title", return_to_title)
 	music(0,10000)
 	igm=false
 	mus=true
@@ -22,6 +24,7 @@ function init_game()
 	stagenum=1
 	
 	init_stages()
+	load_scores()
 	clear_map()
 	load_stage(stagenum)
 	
@@ -48,11 +51,6 @@ function _update60()
 			if btn(❎) or btn(🅾️) then
 				if btn(🅾️) then
 					if(not dead) stagenum+=1
-				end
-				if btn(❎) and dead then
-					music(-1)
-					if(mus) music(0,10000)
-					igm=false
 				end
 				if(stagenum > #stages) stagenum = #stages
 				clear_map()
@@ -153,6 +151,12 @@ end
 function sign(n)
 	if n==0 then return 0
 	else return sgn(n) end
+end
+
+function return_to_title()
+	music(-1)
+	if(mus) music(0,10000)
+	igm=false
 end
 -->8
 --ship code
@@ -299,6 +303,11 @@ function obj_collisions()
 		
 		--portal collision
 		if(not win and coll(ship,portal)) then
+			if pts > scores[stagenum] then
+				highscore = true
+				scores[stagenum] = pts
+				dset(stagenum-1, pts)
+			end
 			sfx(26,2)
 			screenshake(5,0.1)
 			explode(portal.x+3,portal.y+3,1.5,50,0.2,7)
@@ -369,18 +378,19 @@ doors={}
 end
 
 function load_stage(num)
- init_ship()
- coins={}
- mines={}
- btns={}
- btnc=0
- walls={}
- doors={}
- lnchrs={}
- missls={}
- dpls={}
- explos_init()
- t=0
+	highscore=false
+	init_ship()
+	coins={}
+	mines={}
+	btns={}
+	btnc=0
+	walls={}
+	doors={}
+	lnchrs={}
+	missls={}
+	dpls={}
+	explos_init()
+	t=0
 	win = false
 	for i=0,stages[num].h-1 do
 		for j=0,stages[num].w do
@@ -868,9 +878,19 @@ function draw_gui(xx,yy)
 	if win then
 		color(7)
 		local st = "sTAGE cOMPLETE!"
+		if(highscore) st = "nEW hIGHSCORE!"
 		local off = 60-#st*2
 		for i=1,#st do
 			print(sub(st,i,i),xx+i*4+off,yy+sin((t+i*5)/64)*3+24)
+		end
+		if not highscore then
+			local pt = scores[stagenum]
+			local scor = tostr(flr(pt))
+			scor = sub(scor,1,#scor-3)
+			local dec = flr((pt-flr(pt))*10)
+			scor = scor .. "." .. dec
+			st = "hIGHSCORE: " .. tostr(scor)
+			print(st,xx+63-#st*2,yy+80)
 		end
 		st = "pRESS 🅾️ TO cONTINUE"
 		print(st,xx+63-#st*2,yy+100)
@@ -883,10 +903,8 @@ function draw_gui(xx,yy)
 		for i=1,#st do
 			print(sub(st,i,i),xx+i*4+off,yy+sin((t+i*5)/64)*3+24)
 		end
-		st = "pRESS 🅾️ TO rETRY"
-		print(st,xx+63-#st*2,yy+100)
-		st = "pRESS ❎ FOR mAIN mENU"
-		print(st,xx+63-#st*2,yy+108)
+		st = "pRESS 🅾️/❎ TO rETRY"
+		print(st,xx+63-#st*2,yy+104)
 	end
 	
 end
@@ -955,6 +973,15 @@ function obj_behaviour()
 		end
 	end
 	
+end
+-->8
+--save/load data
+
+function load_scores()
+	scores = {}
+	for i=1,#stages do
+		scores[i] = dget(i-1)
+	end
 end
 __gfx__
 000000007700000000000777000770007770000000000077007700007700007700007700dddddddd00000000000000000000000000eeee0000eeee0000eeee00
