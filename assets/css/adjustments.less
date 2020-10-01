@@ -1,0 +1,37 @@
+@media screen and (min-width: 1000px) {
+    .section-feature {
+        &.feature-flipped {
+            grid-template-columns: 1fr 2fr;
+            grid-template-areas: "text video";
+            text-align: right;
+        }
+    }
+}
+@media screen and (max-width: 740px) {
+    .section-jumbotron {
+        height: 60vh;
+        min-height: 550px;
+        & .content {
+            & .copy {
+                grid-gap: 25px;
+                max-width: 400px;
+            }
+        }
+    }
+    .section-feature {
+        padding: 20px;
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+        grid-template-areas: "video" "text";
+    }
+    .section-cta {
+        margin: 20px;
+    }
+}
+@media screen and (max-width: 600px) {
+    & .stores {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-gap: 15px;
+    }
+}
